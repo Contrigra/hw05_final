@@ -1,1 +1,4 @@
-# backend_community_homework
+# yatube
+A Social Network for bloggers \
+Учебный проект для Практикума
+
