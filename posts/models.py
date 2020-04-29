@@ -22,3 +22,7 @@ class Post(models.Model):
     group = models.ForeignKey(Group, on_delete=models.SET_NULL,
                               null=True, blank=True, verbose_name="Group",
                               related_name="group_posts")
+
+    def __str__(self):
+        return self.text
+
