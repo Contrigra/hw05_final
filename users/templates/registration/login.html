@@ -14,9 +14,16 @@
         </div>
         {% endif %}
 
-        <div class="alert alert-info" role="alert">
-          Пожалуйста, авторизуйтесь.
-        </div>
+        {% if next %}
+            <div class="alert alert-info" role="alert">
+              Вы обратились к странице, доступ к которой возможен только для залогиненных пользователей.<br>
+              Пожалуйста, авторизуйтесь.
+            </div>
+        {% else %}
+            <div class="alert alert-info" role="alert">
+              Пожалуйста, авторизуйтесь.
+            </div>
+        {% endif %}
 
         <form method="post" action="{% url 'login' %}">
           {% csrf_token %}
