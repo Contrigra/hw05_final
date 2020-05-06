@@ -1,4 +1,2 @@
-# yatube
-A Social Network for bloggers \
-Учебный проект для Практикума
-
+# hw03_forms
+hw03_forms
