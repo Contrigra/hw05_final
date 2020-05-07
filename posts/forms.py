@@ -1,10 +1,10 @@
 from django import forms
-from .models import Post, Group
+
+from .models import Post
 
 
 class PostForm(forms.ModelForm):
     class Meta:
         model = Post
-        GROUP_CHOICES = Group.objects.values_list('id', 'title')
-        group = forms.ChoiceField(required=False, choices=GROUP_CHOICES)
+        group = forms.ChoiceField(required=False)
         fields = ('group', 'text')
