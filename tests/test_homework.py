@@ -1,5 +1,6 @@
-import pytest
 import re
+
+import pytest
 from django.contrib.admin.sites import site
 from django.contrib.auth import get_user_model
 from django.db.models import fields
@@ -138,7 +139,8 @@ class TestGroup:
         description = 'Тестовое описание группы'
 
         assert Group.objects.all().count() == 0
-        group = Group.objects.create(title=title, slug=slug, description=description)
+        group = Group.objects.create(title=title, slug=slug,
+                                     description=description)
         assert Group.objects.all().count() == 1
         assert Group.objects.get(slug=slug).pk == group.pk
 
