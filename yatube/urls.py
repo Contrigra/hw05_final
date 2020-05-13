@@ -1,10 +1,19 @@
 from django.contrib import admin
+from django.contrib.flatpages import views
 from django.urls import include, path
 
 urlpatterns = [
-    path("", include("posts.urls")),  # looks for the front page in posts/urls
     path("admin/", admin.site.urls),
-    path('auth/', include('users.urls')),  # signing up and auth
-    # Checking, if we do not have custom view, then check built-in
-    path('auth/', include('django.contrib.auth.urls')),
+    # flatpages
+    path('about/', include('django.contrib.flatpages.urls')),
+    path("auth/", include("users.urls")),
+    path("auth/", include("django.contrib.auth.urls")),
+    path("", include("posts.urls")),
 ]
+
+urlpatterns += [path('about-author/', views.flatpage, {'url':
+                                                           '/about-author/'},
+                     name='About the author'),
+                path('about-spec/', views.flatpage, {'url': '/about-spec/'},
+                     name='Technologies used')
+                ]
