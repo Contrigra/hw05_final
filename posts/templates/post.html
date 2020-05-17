@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block content %}
+
+    <main role="main" class="container">
+        <div class="row">
+            <div class="col-md-3 mb-3 mt-1">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="h2">
+                            <!-- Имя автора -->
+                            Лев Толстой
+                        </div>
+                        <div class="h3 text-muted">
+                            <!-- username автора -->
+                            @leo
+                        </div>
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">
+                            <div class="h6 text-muted">
+                                Подписчиков: XXX <br/>
+                                Подписан: XXX
+                            </div>
+                        </li>
+                        <li class="list-group-item">
+                            <div class="h6 text-muted">
+                                <!--Количество записей -->
+                                Записей: 36
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="col-md-9">
+
+                <!-- Пост -->
+                <div class="card mb-3 mt-1 shadow-sm">
+                    <div class="card-body">
+                        <p class="card-text">
+                            <!-- Ссылка на страницу автора в атрибуте href; username автора в тексте ссылки -->
+                            <a href="/leo/"><strong class="d-block text-gray-dark">@leo</strong></a>
+                            <!-- Текст поста -->
+                            [Фокшаны.] Еще переходъ до Фокшанъ, во время
+                            котораго я ѣхалъ съ Монго. Человѣкъ пустой, но съ
+                            твердыми, хотя и ложными убѣжденіями. Генерал[у] по
+                            этому должно быть случаю, угодно было спрашивать о
+                            моемъ здоровьи. Свинья! К[о]вырялъ носъ и ничего не
+                            написалъ — вотъ 2 упрека за нын[ѣшній] день.
+                            Послѣдній упрекъ становится слишкомъ частъ, хотя
+                            походъ и можетъ служить въ немъ отчасти
+                            извиненіемъ. Отношенія мои съ товарищами становятся
+                            такъ пріятны, что мнѣ жалко бросить штабъ. Здоровье
+                            кажется (2) лучше.
+                        </p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="btn-group ">
+                                <!-- Ссылка на редактирование, показывается только автору записи -->
+                                <a class="btn btn-sm text-muted" href="/leo/36/edit" role="button">Редактировать</a>
+                            </div>
+                            <!-- Дата публикации  -->
+                            <small class="text-muted">31 июля 1854 г.
+                                0:00</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+{% endblock %}

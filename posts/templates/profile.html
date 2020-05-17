@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block content %}
+    <main role="main" class="container">
+        <div class="row">
+            <div class="col-md-3 mb-3 mt-1">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="h2">
+                            <!-- Имя автора -->
+                            {{ user_data.get_full_name }}
+                        </div>
+                        <div class="h3 text-muted">
+                            <!-- username автора -->
+                            {{ user_data.username }}
+                        </div>
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">
+                            <div class="h6 text-muted">
+                                Подписчиков: XXX <br/>
+                                Подписан: XXX
+                            </div>
+                        </li>
+                        <li class="list-group-item">
+                            <div class="h6 text-muted">
+                                <!-- Количество записей -->
+                                Записей: {{ user_post_count }}
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="col-md-9">
+
+
+                {% for post in page %}
+                    <div class="card mb-3 mt-1 shadow-sm">
+                        <div class="card-body">
+                            <p class="card-text">
+                                <!-- Ссылка на страницу автора в атрибуте href; username автора в тексте ссылки -->
+                                <a href="/{{ user_data.username }}/"><strong class="d-block text-gray-dark">{{ user_data.username }}</strong></a>
+                                <!-- Текст поста -->
+                                {{ post.text|linebreaksbr }}
+                            </p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="btn-group ">
+                                    <!-- Ссылка на страницу записи в атрибуте href-->
+                                    <a class="btn btn-sm text-muted"
+                                       href={{ post.pk }}
+                                               role="button">Добавить
+                                        комментарий</a>
+                                    <!-- Ссылка на редактирование, показывается только автору записи -->
+                                    {% if user_data.username == user.username %}
+                                        <a class="btn btn-sm text-muted"
+                                           href={% url 'post_edit' username=user_data.username post_id=post.pk %}
+                                                   role="button">Редактировать</a>
+                                    {% endif %}
+
+                                </div>
+                                <!-- Дата публикации  -->
+                                <small class="text-muted">
+                                    {{ post.pub_date|date:"d M Y" }}</small>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+
+                <!-- Остальные посты -->
+
+                <!-- Здесь постраничная навигация паджинатора -->
+                {% if page.has_other_pages %}
+                    {% include "paginator.html" with items=page paginator=paginator %}
+                {% endif %}
+            </div>
+        </div>
+    </main>
+{% endblock %}
