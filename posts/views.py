@@ -55,7 +55,6 @@ def profile(request, username):
                   })
 
 
-
 def post_view(request, username, post_id):
     post = get_object_or_404(Post, pk=post_id)
     user_data = get_object_or_404(User, username=username)
@@ -69,7 +68,7 @@ def post_view(request, username, post_id):
 @login_required
 def post_edit(request, username, post_id):
     post = get_object_or_404(Post, pk=post_id)
-    # validate if PK of requesting user is the same as author's
+    # Validating if PK of requesting user is the same as author's
     if request.user.pk != get_object_or_404(User, username=username).pk:
         return redirect('index')
     if request.method == 'POST':

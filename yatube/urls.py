@@ -11,9 +11,8 @@ urlpatterns = [
     path("", include("posts.urls")),
 ]
 
-urlpatterns += [path('about-author/', views.flatpage, {'url':
-                                                           '/about-author/'},
-                     name='About_the_author'),
-                path('about-spec/', views.flatpage, {'url': '/about-spec/'},
-                     name='Technologies_used')
+urlpatterns += [path('about-author/', views.flatpage,
+                     {'url': '/about-author/'}, name='About_the_author'),
+                path('about-spec/', views.flatpage,
+                     {'url': '/about-spec/'}, name='Technologies_used')
                 ]
