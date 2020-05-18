@@ -36,7 +36,7 @@ def new_post(request):
     return render(request, 'new_post.html', {'form': form})
 
 
-def profile(request, username):  # TODO добавить username и передать
+def profile(request, username):
     user_data = get_object_or_404(User, username=username)
     current_user = request.user
     user_post_count = user_data.author_posts.count()
@@ -55,18 +55,30 @@ def profile(request, username):  # TODO добавить username и перед�
                   })
 
 
-# TODO сделать функцию и темплейт, посмотреть на что должен отправлять
-#  profile в редактировании поста.
+
 def post_view(request, username, post_id):
-    pass
-    # тут тело функции
-    return render(request, "post.html", {})
+    post = get_object_or_404(Post, pk=post_id)
+    user_data = get_object_or_404(User, username=username)
+    user_post_count = user_data.author_posts.count()
+    return render(request, "post.html",
+                  {'post': post,
+                   'user_data': user_data,
+                   'user_post_count': user_post_count})
 
 
+@login_required
 def post_edit(request, username, post_id):
-    pass
-    # тут тело функции. Не забудьте проверить,
-    # что текущий пользователь — это автор записи.
-    # В качестве шаблона страницы редактирования укажите шаблон создания новой записи
-    # который вы создали раньше (вы могли назвать шаблон иначе)
-    return render(request, "post_new.html", {})
+    post = get_object_or_404(Post, pk=post_id)
+    # validate if PK of requesting user is the same as author's
+    if request.user.pk != get_object_or_404(User, username=username).pk:
+        return redirect('index')
+    if request.method == 'POST':
+        form = PostForm(request.POST, instance=post)
+        if form.is_valid():
+            post = form.save(commit=False)
+            post.author = request.user
+            post.save()
+            return redirect('index')
+    form = PostForm(
+        {'group': post.group, 'text': post.text, 'post_id': post_id})
+    return render(request, 'new_post.html', {'form': form, 'post': post})

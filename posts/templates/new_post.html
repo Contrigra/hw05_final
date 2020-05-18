@@ -1,10 +1,12 @@
 {% extends "base.html" %}
+{% block title %}{% if post %}Редактирование поста{% else %}Создание поста{% endif %}{% endblock %}
 {% block content %}
 
     <div class="row justify-content-center">
         <div class="col-md-8 p-5">
             <div class="card">
-                <div class="card-header">Создание нового поста</div>
+                <div class="card-header">{% if post %}Редактирование поста {% else %}Создание нового
+                    поста{% endif %}</div>
                 <div class="card-body">
                     {% if form.errors %}
                         {% for error in form.errors %}
@@ -38,7 +40,7 @@
 
                 <div class="col-md-6 offset-md-4">
                     <button type="submit" class="btn btn-primary">
-                        Создать пост
+                        {% if post %}Редактировать пост{% else %}Создать новый пост{% endif %}
                     </button>
                 </div>
                 </form>

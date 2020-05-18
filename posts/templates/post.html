@@ -8,11 +8,11 @@
                     <div class="card-body">
                         <div class="h2">
                             <!-- Имя автора -->
-                            Лев Толстой
+                            {{ user_data.get_full_name }}
                         </div>
                         <div class="h3 text-muted">
                             <!-- username автора -->
-                            @leo
+                            {{ user_data.username }}
                         </div>
                     </div>
                     <ul class="list-group list-group-flush">
@@ -24,13 +24,14 @@
                         </li>
                         <li class="list-group-item">
                             <div class="h6 text-muted">
-                                <!--Количество записей -->
-                                Записей: 36
+                                <!-- Количество записей -->
+                                Записей: {{ user_post_count }}
                             </div>
                         </li>
                     </ul>
                 </div>
             </div>
+
 
             <div class="col-md-9">
 
@@ -39,32 +40,29 @@
                     <div class="card-body">
                         <p class="card-text">
                             <!-- Ссылка на страницу автора в атрибуте href; username автора в тексте ссылки -->
-                            <a href="/leo/"><strong class="d-block text-gray-dark">@leo</strong></a>
+                            <a href="/{{ user_data.username }}/"><strong class="d-block text-gray-dark">{{ user_data.username }}</strong></a>
                             <!-- Текст поста -->
-                            [Фокшаны.] Еще переходъ до Фокшанъ, во время
-                            котораго я ѣхалъ съ Монго. Человѣкъ пустой, но съ
-                            твердыми, хотя и ложными убѣжденіями. Генерал[у] по
-                            этому должно быть случаю, угодно было спрашивать о
-                            моемъ здоровьи. Свинья! К[о]вырялъ носъ и ничего не
-                            написалъ — вотъ 2 упрека за нын[ѣшній] день.
-                            Послѣдній упрекъ становится слишкомъ частъ, хотя
-                            походъ и можетъ служить въ немъ отчасти
-                            извиненіемъ. Отношенія мои съ товарищами становятся
-                            такъ пріятны, что мнѣ жалко бросить штабъ. Здоровье
-                            кажется (2) лучше.
+                            {{ post.text|linebreaksbr }}
                         </p>
                         <div class="d-flex justify-content-between align-items-center">
                             <div class="btn-group ">
+                                <!-- Ссылка на страницу записи в атрибуте href-->
+                                <a class="btn btn-sm text-muted"
+                                   href={{ post.pk }}
+                                           role="button">Добавить
+                                    комментарий</a>
                                 <!-- Ссылка на редактирование, показывается только автору записи -->
-                                <a class="btn btn-sm text-muted" href="/leo/36/edit" role="button">Редактировать</a>
+                                {% if user_data.username == user.username %}
+                                    <a class="btn btn-sm text-muted"
+                                       href={% url 'post_edit' username=user_data.username post_id=post.pk %}
+                                               role="button">Редактировать</a>
+                                {% endif %}
+
                             </div>
                             <!-- Дата публикации  -->
-                            <small class="text-muted">31 июля 1854 г.
-                                0:00</small>
+                            <small class="text-muted">
+                                {{ post.pub_date|date:"d M Y" }}</small>
+
                         </div>
-                    </div>
-                </div>
-            </div>
-        </div>
     </main>
 {% endblock %}
