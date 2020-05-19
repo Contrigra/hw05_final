@@ -56,7 +56,8 @@ def profile(request, username):
 
 
 def post_view(request, username, post_id):
-    post = get_object_or_404(Post, pk=post_id)
+    author = get_object_or_404(User, username=username)
+    post = get_object_or_404(Post, author=author, pk=post_id)
     user_data = get_object_or_404(User, username=username)
     user_post_count = user_data.author_posts.count()
     return render(request, "post.html",
@@ -67,10 +68,11 @@ def post_view(request, username, post_id):
 
 @login_required
 def post_edit(request, username, post_id):
-    post = get_object_or_404(Post, pk=post_id)
+    author = get_object_or_404(User, username=username)
+    post = get_object_or_404(Post, author=author, pk=post_id)
     # Validating if PK of requesting user is the same as author's
     if request.user.pk != get_object_or_404(User, username=username).pk:
-        return redirect('index')
+        return redirect('post', username=username, post_id=post_id)
     if request.method == 'POST':
         form = PostForm(request.POST, instance=post)
         if form.is_valid():
