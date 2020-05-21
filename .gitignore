@@ -11,6 +11,7 @@ __pycache__/
 .DS_Store
 .AppleDouble
 .LSOverride
+.vscode
 
 *.sublime-project
 *.sublime-workspace

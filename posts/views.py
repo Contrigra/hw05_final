@@ -19,8 +19,14 @@ def index(request):
 
 def group_posts(request, slug):
     group = get_object_or_404(Group, slug=slug)
-    posts = group.group_posts.order_by('-pub_date')[:12]
-    return render(request, 'group.html', {'group': group, 'posts': posts})
+    post_list = group.group_posts.order_by('-pub_date')
+    post_count = post_list.count()
+    paginator = Paginator(post_list, 10)
+    page_number = request.GET.get('page')
+    page = paginator.get_page(page_number)
+    return render(request, 'group.html',
+                  {'group': group, 'page': page, 'paginator': paginator,
+                   'post_count': post_count})
 
 
 @login_required
@@ -66,7 +72,6 @@ def post_view(request, username, post_id):
                    'user_post_count': user_post_count})
 
 
-@login_required
 def post_edit(request, username, post_id):
     author = get_object_or_404(User, username=username)
     post = get_object_or_404(Post, author=author, pk=post_id)
@@ -79,7 +84,7 @@ def post_edit(request, username, post_id):
             post = form.save(commit=False)
             post.author = request.user
             post.save()
-            return redirect('index')
+            return redirect('post', username=username, post_id=post_id)
     form = PostForm(
         {'group': post.group, 'text': post.text, 'post_id': post_id})
     return render(request, 'new_post.html', {'form': form, 'post': post})
