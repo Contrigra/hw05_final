@@ -20,13 +20,11 @@ def index(request):
 def group_posts(request, slug):
     group = get_object_or_404(Group, slug=slug)
     post_list = group.group_posts.order_by('-pub_date')
-    post_count = post_list.count()
     paginator = Paginator(post_list, 10)
     page_number = request.GET.get('page')
     page = paginator.get_page(page_number)
     return render(request, 'group.html',
-                  {'group': group, 'page': page, 'paginator': paginator,
-                   'post_count': post_count})
+                  {'group': group, 'page': page, 'paginator': paginator})
 
 
 @login_required
@@ -44,8 +42,6 @@ def new_post(request):
 
 def profile(request, username):
     user_data = get_object_or_404(User, username=username)
-    current_user = request.user
-    user_post_count = user_data.author_posts.count()
     post_list = user_data.author_posts.order_by('-pub_date')
     paginator = Paginator(post_list, 5)
     page_number = request.GET.get('page')
@@ -54,10 +50,9 @@ def profile(request, username):
     return render(request, "profile.html",
                   {
                       'user_data': user_data,
-                      'user_post_count': user_post_count,
+
                       'page': page,
                       'paginator': paginator,
-                      'current_user': current_user
                   })
 
 
@@ -65,26 +60,26 @@ def post_view(request, username, post_id):
     author = get_object_or_404(User, username=username)
     post = get_object_or_404(Post, author=author, pk=post_id)
     user_data = get_object_or_404(User, username=username)
-    user_post_count = user_data.author_posts.count()
     return render(request, "post.html",
                   {'post': post,
-                   'user_data': user_data,
-                   'user_post_count': user_post_count})
+                   'user_data': user_data})
 
 
 def post_edit(request, username, post_id):
     author = get_object_or_404(User, username=username)
     post = get_object_or_404(Post, author=author, pk=post_id)
-    # Validating if PK of requesting user is the same as author's
-    if request.user.pk != get_object_or_404(User, username=username).pk:
-        return redirect('post', username=username, post_id=post_id)
+    # Validating if the requesting user is an author
+    if request.user != author:
+        return redirect('post_view', username=username, post_id=post_id)
+
     if request.method == 'POST':
         form = PostForm(request.POST, instance=post)
         if form.is_valid():
             post = form.save(commit=False)
             post.author = request.user
             post.save()
-            return redirect('post', username=username, post_id=post_id)
+            return redirect('post_view', username=username, post_id=post_id)
+
     form = PostForm(
         {'group': post.group, 'text': post.text, 'post_id': post_id})
     return render(request, 'new_post.html', {'form': form, 'post': post})

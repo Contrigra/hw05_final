@@ -25,7 +25,7 @@
                         <li class="list-group-item">
                             <div class="h6 text-muted">
                                 <!-- Количество записей -->
-                                Записей: {{ user_post_count }}
+                                Записей: {{ user_data.author_posts.count }}
                             </div>
                         </li>
                     </ul>
@@ -40,7 +40,8 @@
                     <div class="card-body">
                         <p class="card-text">
                             <!-- Ссылка на страницу автора в атрибуте href; username автора в тексте ссылки -->
-                            <a href="/{{ user_data.username }}/"><strong class="d-block text-gray-dark">{{ user_data.username }}</strong></a>
+                            <a href="{% url 'profile' username=user_data.username %}">
+                                <strong class="d-block text-gray-dark">{{ user_data.username }}</strong></a>
                             <!-- Текст поста -->
                             {{ post.text|linebreaksbr }}
                         </p>
@@ -57,7 +58,6 @@
                                        href={% url 'post_edit' username=user_data.username post_id=post.pk %}
                                                role="button">Редактировать</a>
                                 {% endif %}
-
                             </div>
                             <!-- Дата публикации  -->
                             <small class="text-muted">
