@@ -4,92 +4,102 @@ from django.urls import reverse
 from posts.models import User, Post
 
 
-class TestPosts(TestCase):
+class TestPostCreation(TestCase):
+    """Test for proper post creation and protection from anons"""
+
     def setUp(self):
+        self.text = 'test_text'
         self.user = User.objects.create_user(username='testuser',
                                              password=12345)
-        self.text = 'test_text'
 
     def test_auth_user_post_creation(self):
+        # Login into our user and check for redirection.
         self.client.login(username=self.user.username,
                           password=12345)
         response = self.client.post(reverse('new_post'), {'text': self.text})
         self.assertEqual(response.status_code, 302)
 
-        response = self.client.get(
-            reverse('profile', kwargs={'username': self.user.username}))
-        self.assertContains(response, self.text)
+        # Test that the text is equal
+        post = Post.objects.first()
+        self.assertEqual(post.text, self.text)
 
-    def test_anon_post_creation(self):
+    def test_anon_post_creation_redirect(self):
         # Test, if anon is able to retrieve the new_post page
         response = self.client.get(reverse('new_post'))
         self.assertRedirects(response=response,
                              expected_url='/auth/login?next=/new/',
                              target_status_code=301)
 
+    def test_anon_post_creation_post_request(self):
         # Test, if anon is able to create a post through a POST request.
         self.client.post(reverse('new_post'), {'text': self.text})
-        post = Post.objects.filter(text=self.text).exists()
-        self.assertFalse(post)
+        post_count = Post.objects.filter(text=self.text).count()
+        self.assertEqual(post_count, 0)
 
-    def test_post_render_all(self):
-        self.client.login(username=self.user.username, password=12345)
-        post = Post.objects.create(text=self.text, author=self.user)
 
+class TestPostRender(TestCase):
+    """Test for proper post's rendering."""
+
+    def setUp(self):
+        self.user = User.objects.create_user(username='testuser',
+                                             password=12345)
+        self.text = 'test_text'
+        self.post = Post.objects.create(text=self.text, author=self.user)
+
+    def test_profile(self):
         # Profile test
         response = self.client.get(
             reverse('profile', kwargs={'username': self.user.username}))
         self.assertContains(response, self.text)
 
+    def test_index(self):
         # Index page test
         response = self.client.get(reverse('index'))
         self.assertContains(response, self.text)
 
-        # Test that there's only 1 post and it is ours
-        posts_count = len(response.context['page'].object_list)
-        self.assertEqual(posts_count, 1)
-        post_text = str(response.context['page'].object_list[0])
-        self.assertEqual(post_text, self.text)
-
+    def test_direct_post_view(self):
         # Direct post's page test
         response = self.client.get(
             reverse('post_view',
-                    kwargs={'username': 'testuser', 'post_id': post.pk}))
+                    kwargs={'username': 'testuser', 'post_id': self.post.pk}))
         self.assertContains(response, self.text)
 
-    def test_edit_view(self):
+
+class TestPostEdit(TestCase):
+    """Test for proper post editing and protection"""
+
+    def setUp(self):
+        self.user = User.objects.create_user(username='testuser',
+                                             password=12345)
+        self.text = 'test_text'
+        self.post = Post.objects.create(text=self.text, author=self.user)
+        self.text_edited = 'test_text_edit'
+
+    def test_post_edit(self):
         self.client.login(username=self.user.username, password=12345)
-        post = Post.objects.create(text=self.text, author=self.user)
-        post_count = Post.objects.all().count()
-
-        # Check if the post's got created and renders properly
-        response = self.client.get(reverse('index'))
-        self.assertEqual(post_count, 1)
-        self.assertContains(response, self.text)
 
         # Post editing
-        text_edited = 'test_text_edit'
         self.client.post(reverse('post_edit',
                                  kwargs={'username': self.user.username,
-                                         'post_id': post.pk}),
-                         {'text': text_edited})
+                                         'post_id': self.post.pk}),
+                         {'text': self.text_edited})
 
         # Test that no unwanted entities got created and contents are ok
-        post_edited = Post.objects.get(pk=post.pk)
-        post_count_edited = Post.objects.all().count()
-        self.assertEqual(post, post_edited)
-        self.assertEqual(post_edited.text, text_edited)
-        self.assertEqual(post_count, post_count_edited)
+        post_edited = Post.objects.first()
+        post_count = Post.objects.all().count()
+        self.assertEqual(self.post, post_edited)
+        self.assertEqual(post_edited.text, self.text_edited)
+        self.assertEqual(post_count, 1)
 
         # Test connected pages and proper rendering
         response = self.client.get(
             reverse('profile', kwargs={'username': self.user.username}))
-        self.assertContains(response, text_edited)
+        self.assertContains(response, self.text_edited)
         response = self.client.get(reverse('index'))
-        self.assertContains(response, text_edited)
+        self.assertContains(response, self.text_edited)
         response = self.client.get(reverse('post_view',
                                            kwargs={
                                                'username': self.user.username,
                                                'post_id': post_edited.pk})
                                    )
-        self.assertContains(response, 'test_text_edit')
+        self.assertContains(response, self.text_edited)

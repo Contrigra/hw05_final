@@ -4,7 +4,6 @@ from django.contrib.auth.forms import UserCreationForm
 User = get_user_model()
 
 
-# Creating our own class for signing up, built upon built-in UserCreationForm
 class CreationForm(UserCreationForm):
     class Meta(UserCreationForm.Meta):
         model = User

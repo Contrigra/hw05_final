@@ -21,3 +21,4 @@ posts/static/
 
 db.sqlite3
 /posts/static/
+/.vs/
