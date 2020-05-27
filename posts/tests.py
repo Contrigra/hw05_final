@@ -66,7 +66,7 @@ class TestPostRender(TestCase):
 
 
 class TestPostEdit(TestCase):
-    """Test for proper post editing and protection"""
+    """Test for proper post editing."""
 
     def setUp(self):
         self.user = User.objects.create_user(username='testuser',
@@ -91,15 +91,35 @@ class TestPostEdit(TestCase):
         self.assertEqual(post_edited.text, self.text_edited)
         self.assertEqual(post_count, 1)
 
-        # Test connected pages and proper rendering
+
+class TestPostRender(TestCase):
+    """Test for rendering edited posts."""
+
+    def setUp(self):
+        self.user = User.objects.create_user(username='testuser',
+                                             password=12345)
+        self.text = 'test_text'
+        self.post = Post.objects.create(text=self.text, author=self.user)
+        self.text_edited = 'test_text_edit'
+
+    def test_post_render_all_pages(self):
+        # Post editing
+        self.client.login(username=self.user.username, password=12345)
+        post = self.client.post(reverse('post_edit',
+                                        kwargs={'username': self.user.username,
+                                                'post_id': self.post.pk}),
+                                {'text': self.text_edited})
+
+        # Test for rendering
         response = self.client.get(
             reverse('profile', kwargs={'username': self.user.username}))
+
         self.assertContains(response, self.text_edited)
         response = self.client.get(reverse('index'))
         self.assertContains(response, self.text_edited)
         response = self.client.get(reverse('post_view',
                                            kwargs={
                                                'username': self.user.username,
-                                               'post_id': post_edited.pk})
+                                               'post_id': Post.objects.first().pk})
                                    )
         self.assertContains(response, self.text_edited)

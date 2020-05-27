@@ -53,7 +53,7 @@
                                            role="button">Добавить
                                     комментарий</a>
                                 <!-- Ссылка на редактирование, показывается только автору записи -->
-                                {% if author.username == user.username %}
+                                {% if author == user %}
                                     <a class="btn btn-sm text-muted"
                                        href={% url 'post_edit' username=author.username post_id=post.pk %}
                                                role="button">Редактировать</a>
