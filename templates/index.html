@@ -7,8 +7,18 @@
             Автор: {{ post.author.get_full_name }}, Дата публикации:
             {{ post.pub_date|date:"d M Y" }}
         </h3>
-        <p>{{ post.text|linebreaksbr }}</p>
         <hr>
+
+        {% load thumbnail %}
+        {% thumbnail post.image "960x339" crop="center" upscale=True as im %}
+            <img class="card-img" src="{{ im.url }}">
+        {% endthumbnail %}
+
+
+
+        <p>{{ post.text|linebreaksbr }}</p>
+
+
     {% endfor %}
     {% if page.has_other_pages %}
         {% include "paginator.html" with items=page paginator=paginator %}

@@ -1,7 +1,7 @@
 from django.test import TestCase
 from django.urls import reverse
 
-from posts.models import User, Post
+from posts.models import User, Post, Group
 
 
 class TestPostCreation(TestCase):
@@ -92,7 +92,7 @@ class TestPostEdit(TestCase):
         self.assertEqual(post_count, 1)
 
 
-class TestPostRender(TestCase):
+class TestEditedPostRender(TestCase):
     """Test for rendering edited posts."""
 
     def setUp(self):
@@ -105,10 +105,10 @@ class TestPostRender(TestCase):
     def test_post_render_all_pages(self):
         # Post editing
         self.client.login(username=self.user.username, password=12345)
-        post = self.client.post(reverse('post_edit',
-                                        kwargs={'username': self.user.username,
-                                                'post_id': self.post.pk}),
-                                {'text': self.text_edited})
+        self.client.post(reverse('post_edit',
+                                 kwargs={'username': self.user.username,
+                                         'post_id': self.post.pk}),
+                         {'text': self.text_edited})
 
         # Test for rendering
         response = self.client.get(
@@ -117,9 +117,92 @@ class TestPostRender(TestCase):
         self.assertContains(response, self.text_edited)
         response = self.client.get(reverse('index'))
         self.assertContains(response, self.text_edited)
-        response = self.client.get(reverse('post_view',
-                                           kwargs={
-                                               'username': self.user.username,
-                                               'post_id': Post.objects.first().pk})
-                                   )
+        response = self.client.get(reverse(
+            'post_view',
+            kwargs={
+                'username': self.user.username,
+                'post_id': Post.objects.first().pk})
+        )
         self.assertContains(response, self.text_edited)
+
+
+class TestHandlers(TestCase):
+    """Test for custom error handlers"""
+
+    def test_404(self):
+        response = self.client.get('/test_non_existing_url_qweqwe/')
+        self.assertEqual(response.status_code, 404)
+
+
+class TestImageRender(TestCase):
+    """Test for image handling,
+    and rendering looking for <img tag in a response."""
+
+    def setUp(self):
+        self.tag = '<img'
+        self.user = User.objects.create_user(username='testuser',
+                                             password=12345)
+        self.text = 'test_text'
+        self.post = Post.objects.create(
+            text=self.text, author=self.user,
+            image='posts/test_image/Test_image.jpg'
+        )
+
+    def test_direct_post_image_render(self):
+        response = self.client.get(
+            reverse('post_view', kwargs={'username': self.user.username,
+                                         'post_id': self.post.pk}))
+        self.assertContains(response, self.tag)
+
+    def test_profile_post_image_render(self):
+        response = self.client.get(
+            reverse('profile', kwargs={'username': self.user.username}))
+        self.assertContains(response, self.tag)
+
+    def test_group_post_Image_Render(self):
+        # Creating a new group and assigning it to the existing test post
+        self.group = Group.objects.create(title='Test group',
+                                          slug='test-group',
+                                          description='Test group description')
+        self.post.group_id = self.group.pk
+        self.post.save()
+
+        response = self.client.get(
+            reverse('group_posts', kwargs={'slug': self.group.slug}))
+        self.assertContains(response, self.tag)
+
+
+class TestImageFormProtection(TestCase):
+    """Test for image form protection"""
+
+    def setUp(self):
+        self.user = User.objects.create_user(username='testuser',
+                                             password=12345)
+        self.client.force_login(self.user)
+        self.post = Post.objects.create(text='test_text', author=self.user)
+        self.image_path = 'media/posts/test_image/Test_image.jpg'
+        self.non_image_path = 'posts/tests.py'
+        self.error_message = f'Загрузите правильное изображение. Фа\
+йл, который вы загрузили, поврежден или не является изображением.'
+
+    def test_correct_image_form_protection(self):
+        with open(self.image_path, 'rb') as img:
+            self.client.post(reverse('post_edit',
+                                     kwargs={
+                                         'username': self.user.username,
+                                         'post_id': self.post.pk}),
+                             {'image': img,
+                              'text': 'edited text with an image'})
+
+            post = Post.objects.first()
+            self.assertIsNotNone(post.image)
+
+    def test_incorrect_image_form_protection(self):
+        with open(self.non_image_path, 'rb') as non_img:
+            response = self.client.post(reverse('post_edit',
+                                                kwargs={
+                                                    'username': self.user.username,
+                                                    'post_id': self.post.pk}),
+                                        {'image': non_img,
+                                         'text': 'edited text with wrong file '})
+            self.assertFormError(response, 'form', 'image', self.error_message)
