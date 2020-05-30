@@ -1,26 +1,19 @@
 {% extends "base.html" %}
-{% block title %}Последние обновления на сайте{% endblock %}
+{% block title %} Последние обновления {% endblock %}
 
 {% block content %}
-    {% for post in page %}
-        <h3>
-            Автор: {{ post.author.get_full_name }}, Дата публикации:
-            {{ post.pub_date|date:"d M Y" }}
-        </h3>
-        <hr>
+    <div class="container">
+        <h1> Последние обновления на сайте</h1>
+        <!-- Вывод ленты записей -->
+        {% for post in page %}
+            <!-- Вот он, новый include! -->
+            {% include "post_item.html" with post=post %}
+        {% endfor %}
+    </div>
 
-        {% load thumbnail %}
-        {% thumbnail post.image "960x339" crop="center" upscale=True as im %}
-            <img class="card-img" src="{{ im.url }}">
-        {% endthumbnail %}
-
-
-
-        <p>{{ post.text|linebreaksbr }}</p>
-
-
-    {% endfor %}
+    <!-- Вывод паджинатора -->
     {% if page.has_other_pages %}
         {% include "paginator.html" with items=page paginator=paginator %}
     {% endif %}
+
 {% endblock %}

@@ -2,8 +2,8 @@ from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.shortcuts import render, get_object_or_404, redirect
 
-from posts.forms import PostForm
-from posts.models import Post, Group, User
+from posts.forms import PostForm, CommentForm
+from posts.models import Post, Group, User, Comment
 
 
 def index(request):
@@ -58,15 +58,19 @@ def profile(request, username):
 def post_view(request, username, post_id):
     author = get_object_or_404(User, username=username)
     post = get_object_or_404(Post, author=author, pk=post_id)
-    return render(request, "post.html",
+    items = Comment.objects.filter(post=post_id)
+    return render(request, 'post.html',
                   {'post': post,
-                   'author': author})
+                   'author': author,
+                   'items': items})
 
 
 @login_required
 def post_edit(request, username, post_id):
     author = get_object_or_404(User, username=username)
     post = get_object_or_404(Post, pk=post_id, author=author)
+
+    print(post.post_comments.count())
     if request.user != author:
         return redirect("post_view", username=request.user.username,
                         post_id=post_id)
@@ -95,5 +99,25 @@ def server_error(request):
     return render(request, 'misc/500.html', status=500)
 
 
-# TODO add comment view function
-def add_comment(request):
+@login_required
+def add_comment(request, username, post_id):
+    post = get_object_or_404(Post, pk=post_id)
+    author = get_object_or_404(User, username=username)
+    items = Comment.objects.filter(post=post.id)
+
+    form = CommentForm(request.POST or None)
+    if request.method == 'POST':
+        if form.is_valid():
+            new_comment = form.save(commit=False)
+            new_comment.author = request.user
+            new_comment.post = post
+            new_comment.save()
+            return redirect('post_view', username=username,
+                            post_id=post_id)
+
+    form = CommentForm(request.POST or None)
+    return render(request, 'post.html',
+                  {'post': post,
+                   'author': author,
+                   'form': form,
+                   'items': items})
