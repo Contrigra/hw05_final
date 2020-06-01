@@ -128,6 +128,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 # Login
 
 LOGIN_URL = "/auth/login"
@@ -142,3 +143,11 @@ EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'sent_emails')
 # Current Site ID
 
 SITE_ID = 3
+
+# Cache
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+    }
+}

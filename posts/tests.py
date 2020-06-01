@@ -1,4 +1,5 @@
-from django.test import TestCase
+from django.core.cache import cache
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from posts.models import User, Post, Group
@@ -53,6 +54,7 @@ class TestPostRender(TestCase):
         self.assertContains(response, self.text)
 
     def test_index(self):
+        cache.clear()
         # Index page test
         response = self.client.get(reverse('index'))
         self.assertContains(response, self.text)
@@ -92,6 +94,8 @@ class TestPostEdit(TestCase):
         self.assertEqual(post_count, 1)
 
 
+@override_settings(CACHES={
+    'default': {'BACKEND': 'django.core.cache.backends.dummy.DummyCache'}})
 class TestEditedPostRender(TestCase):
     """Test for rendering edited posts."""
 
@@ -113,7 +117,6 @@ class TestEditedPostRender(TestCase):
         # Test for rendering
         response = self.client.get(
             reverse('profile', kwargs={'username': self.user.username}))
-
         self.assertContains(response, self.text_edited)
         response = self.client.get(reverse('index'))
         self.assertContains(response, self.text_edited)
@@ -206,3 +209,21 @@ class TestImageFormProtection(TestCase):
                                         {'image': non_img,
                                          'text': 'edited text with wrong file '})
             self.assertFormError(response, 'form', 'image', self.error_message)
+
+
+class TestCache(TestCase):
+    """Test for caching"""
+
+    def setUp(self):
+        self.user = User.objects.create_user(username='testuser',
+                                             password=12345)
+        self.client.force_login(self.user)
+        self.text = 'test_text'
+
+    def test_index_cache(self):
+        # Create a cached page and check that there's no new post yet.
+        self.client.get(reverse('index'))
+        self.client.post(reverse('new_post'), {'text': self.text})
+        response = self.client.get(reverse('index'))
+
+        self.assertNotContains(response, self.text)
