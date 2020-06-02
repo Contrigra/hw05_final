@@ -121,3 +121,23 @@ def add_comment(request, username, post_id):
                    'author': author,
                    'form': form,
                    'items': items})
+
+
+# TODO 3 вью функции для системы фолова
+@login_required
+def follow_index(request):
+    # информация о текущем пользователе доступна в переменной request.user
+    # ...
+    return render(request, "follow.html", {...})
+
+
+@login_required
+def profile_follow(request, username):
+    # ...
+    pass
+
+
+@login_required
+def profile_unfollow(request, username):
+    # ...
+    pass

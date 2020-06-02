@@ -36,3 +36,9 @@ class Comment(models.Model):
                                related_name='comment_author')
     text = models.TextField()
     created = models.DateTimeField('date published', auto_now_add=True)
+
+# TODO Follow model.
+#  user — ссылка на объект пользователя, который подписывается.
+#  Укажите имя связи: related_name="follower"
+#  author — ссылка на объект пользователя, на которого подписываются,
+#  имя связи пусть будет related_name="following"
