@@ -3,24 +3,23 @@
 
 {% block content %}
 
-
+    {% include 'menu.html' with index=True %}
     {% load cache %}
     {% cache 20 index_page page.number %}
-    <div class="container">
-        <h1> Последние обновления на сайте</h1>
-        <!-- Вывод ленты записей -->
+        <div class="container">
+            <h1> Последние обновления на сайте</h1>
+            <!-- Вывод ленты записей -->
 
-        {% for post in page %}
-            <!-- Вот он, новый include! -->
-            {% include "post_item.html" with post=post %}
-        {% endfor %}
+            {% for post in page %}
+                <!-- Вот он, новый include! -->
+                {% include "post_item.html" with post=post %}
+            {% endfor %}
+        </div>
 
-    </div>
-
-    <!-- Вывод паджинатора -->
-    {% if page.has_other_pages %}
-        {% include "paginator.html" with items=page paginator=paginator %}
-    {% endif %}
+        <!-- Вывод паджинатора -->
+        {% if page.has_other_pages %}
+            {% include "paginator.html" with items=page paginator=paginator %}
+        {% endif %}
 
     {% endcache %}
 {% endblock %}

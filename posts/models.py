@@ -37,8 +37,15 @@ class Comment(models.Model):
     text = models.TextField()
     created = models.DateTimeField('date published', auto_now_add=True)
 
+
 # TODO Follow model.
 #  user — ссылка на объект пользователя, который подписывается.
 #  Укажите имя связи: related_name="follower"
 #  author — ссылка на объект пользователя, на которого подписываются,
 #  имя связи пусть будет related_name="following"
+
+class Follow(models.Model):
+    author = models.ForeignKey(User, on_delete=models.CASCADE,
+                               related_name='following')
+    user = models.ForeignKey(User, on_delete=models.CASCADE,
+                             related_name='follower')

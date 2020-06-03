@@ -3,7 +3,7 @@ from django.core.paginator import Paginator
 from django.shortcuts import render, get_object_or_404, redirect
 
 from posts.forms import PostForm, CommentForm
-from posts.models import Post, Group, User, Comment
+from posts.models import Post, Group, User, Comment, Follow
 
 
 def index(request):
@@ -46,22 +46,40 @@ def profile(request, username):
     paginator = Paginator(post_list, 5)
     page_number = request.GET.get('page')
     page = paginator.get_page(page_number)
+    item_dict = {
+        'author': author,
+        'page': page,
+        'paginator': paginator,
 
-    return render(request, "profile.html",
-                  {
-                      'author': author,
-                      'page': page,
-                      'paginator': paginator,
-                  })
+    }
+    if not request.user.is_anonymous:
+        following = Follow.objects.filter(user=request.user, author=author)
+        item_dict['following'] = following
+
+    return render(request, "profile.html", item_dict
+                  )
 
 
 def post_view(request, username, post_id):
     author = get_object_or_404(User, username=username)
     post = get_object_or_404(Post, author=author, pk=post_id)
     items = Comment.objects.filter(post=post_id)
+
+    form = CommentForm(request.POST or None)
+    if request.method == 'POST':
+        if form.is_valid():
+            new_comment = form.save(commit=False)
+            new_comment.author = request.user
+            new_comment.post = post
+            new_comment.save()
+            return redirect('post_view', username=username,
+                            post_id=post_id)
+
+    form = CommentForm(request.POST or None)
     return render(request, 'post.html',
                   {'post': post,
                    'author': author,
+                   'form': form,
                    'items': items})
 
 
@@ -70,7 +88,6 @@ def post_edit(request, username, post_id):
     author = get_object_or_404(User, username=username)
     post = get_object_or_404(Post, pk=post_id, author=author)
 
-    print(post.post_comments.count())
     if request.user != author:
         return redirect("post_view", username=request.user.username,
                         post_id=post_id)
@@ -90,8 +107,9 @@ def post_edit(request, username, post_id):
 
 
 def page_not_found(request, exception):
-    """The redefinition of the 404 page"""
-    # Exception contains debug info
+    """The redefinition of the 404 page.
+    Exception contains debug info given by django"""
+
     return render(request, 'misc/404.html', {'path': request.path}, status=404)
 
 
@@ -123,21 +141,43 @@ def add_comment(request, username, post_id):
                    'items': items})
 
 
-# TODO 3 вью функции для системы фолова
 @login_required
 def follow_index(request):
-    # информация о текущем пользователе доступна в переменной request.user
-    # ...
-    return render(request, "follow.html", {...})
+    user = request.user
+    followed_authors = user.follower.all()
+
+    # Create a list of posts to paginate
+    post_list = []
+    for author in followed_authors:
+        post_list += Post.objects.filter(author_id=author.author_id)
+
+    paginator = Paginator(post_list, 10)
+    page_number = request.GET.get('page')
+    page = paginator.get_page(page_number)
+    return render(request, 'follow.html',
+                  {'page': page, 'paginator': paginator})
+
+    # return render(request, "follow.html", {...})
 
 
 @login_required
 def profile_follow(request, username):
-    # ...
-    pass
+    author = User.objects.get(username=username)
+    if Follow.objects.filter(user=request.user,
+                             author_id=author.id).count() == 1:
+        return redirect('profile', username=username)
+
+    if request.user != author:
+        Follow.objects.create(user=request.user, author=author)
+        return redirect('profile', username=username)
+
+    return redirect('profile', username=username)
 
 
 @login_required
 def profile_unfollow(request, username):
-    # ...
-    pass
+    author = User.objects.get(username=username)
+    follow_to_delete = Follow.objects.filter(user=request.user,
+                                             author=author)
+    follow_to_delete.delete()
+    return redirect('profile', username=username)

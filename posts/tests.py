@@ -225,5 +225,4 @@ class TestCache(TestCase):
         self.client.get(reverse('index'))
         self.client.post(reverse('new_post'), {'text': self.text})
         response = self.client.get(reverse('index'))
-
         self.assertNotContains(response, self.text)
