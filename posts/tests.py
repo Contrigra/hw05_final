@@ -2,7 +2,7 @@ from django.core.cache import cache
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
-from posts.models import User, Post, Group
+from posts.models import User, Post, Group, Follow
 
 
 class TestPostCreation(TestCase):
@@ -202,12 +202,14 @@ class TestImageFormProtection(TestCase):
 
     def test_incorrect_image_form_protection(self):
         with open(self.non_image_path, 'rb') as non_img:
-            response = self.client.post(reverse('post_edit',
-                                                kwargs={
-                                                    'username': self.user.username,
-                                                    'post_id': self.post.pk}),
-                                        {'image': non_img,
-                                         'text': 'edited text with wrong file '})
+            response = self.client.post(reverse(
+                'post_edit',
+                kwargs={
+                    'username': self.user.username,
+                    'post_id': self.post.pk}),
+                {'image': non_img,
+                 'text': 'edited text with wrong file '}
+            )
             self.assertFormError(response, 'form', 'image', self.error_message)
 
 
@@ -226,3 +228,82 @@ class TestCache(TestCase):
         self.client.post(reverse('new_post'), {'text': self.text})
         response = self.client.get(reverse('index'))
         self.assertNotContains(response, self.text)
+
+
+class TestFollowerSystem(TestCase):
+    """Test for follower system. Test for follow and unfollow,
+    and proper construction of follower-index page"""
+
+    def setUp(self):
+        self.user = User.objects.create_user(username='testuser',
+                                             password=12345)
+        self.user_to_follow = User.objects.create_user(
+            username='test_user_to_follow',
+            password=12345)
+        self.client.force_login(self.user)
+        self.text = 'test_text'
+        self.post = Post.objects.create(
+            text=self.text, author=self.user_to_follow)
+
+    def test_auth_user_follow_follow(self):
+        response = self.client.get(
+            reverse('profile_follow',
+                    kwargs={'username': self.user_to_follow.username}))
+        self.assertIsNotNone(Follow.objects.first())
+
+    def test_auth_user_follow_unfollow(self):
+        response = self.client.get(
+            reverse('profile_unfollow',
+                    kwargs={'username': self.user_to_follow.username}))
+        self.assertIsNone(Follow.objects.first())
+
+    def test_follower_index(self):
+        self.client.get(reverse('profile_follow',
+                                kwargs={
+                                    'username': self.user_to_follow.username}))
+        response = self.client.get(reverse('follow_index'))
+        self.assertContains(response, self.text)
+
+    @override_settings(CACHES={
+        'default': {'BACKEND': 'django.core.cache.backends.dummy.DummyCache'}})
+    def test_not_follower_index(self):
+        response = self.client.get(reverse('follow_index'))
+        self.assertNotContains(response, self.text)
+
+
+class TestCommentSystem(TestCase):
+    """Test for proper commenting. Test if anon and
+    -anon can or cannot comment"""
+
+    def setUp(self):
+        self.user = User.objects.create_user(username='testuser',
+                                             password=12345)
+        self.text = 'test_text'
+        self.post = Post.objects.create(
+            text=self.text, author=self.user)
+
+        self.commenting_user = User.objects.create_user(
+            username='commenting_user',
+            password=12345)
+        self.comment_text = 'test_comment'
+
+
+    def test_auth_user_commenting(self):
+        self.client.force_login(self.commenting_user)
+
+        response = self.client.post(
+            reverse('add_comment', kwargs={'username': self.user.username,
+                                           'post_id': self.post.pk}),
+            {'text': self.comment_text}, follow=True)
+        self.assertContains(response, self.comment_text)
+
+    def test_anon_user_commenting(self):
+        """Anons should not be able to comment,
+        make a POST request without logging"""
+
+        response = self.client.post(
+            reverse('add_comment', kwargs={'username': self.user.username,
+                                           'post_id': self.post.pk}),
+            {'text': self.comment_text}, follow=True)
+        self.assertNotContains(response, self.comment_text)
+

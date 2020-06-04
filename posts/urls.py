@@ -12,7 +12,7 @@ urlpatterns = [
     path('<username>/<int:post_id>', views.post_view, name='post_view'),
     path("<username>/<int:post_id>/comment/", views.add_comment,
          name="add_comment"),
-    path("<username>/follow", views.profile_follow, name="profile_follow"),
-    path("<username>/unfollow", views.profile_unfollow,
+    path("<username>/follow/", views.profile_follow, name="profile_follow"),
+    path("<username>/unfollow/", views.profile_unfollow,
          name="profile_unfollow"),
 ]

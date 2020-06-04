@@ -8,7 +8,6 @@ class PostForm(forms.ModelForm):
         model = Post
         fields = ['group', 'text', 'image']
 
-# TODO форма для комментариев
 
 class CommentForm(forms.ModelForm):
     class Meta:
