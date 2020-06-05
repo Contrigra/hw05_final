@@ -25,16 +25,16 @@
 
 <!-- Комментарии -->
 <br>
-{% for item in items %}
+{% for comment in comments %}
     <div class="media mb-4">
         <div class="media-body">
             <h5 class="mt-0">
                 <a
-                        href="{% url 'profile' item.author.username %}"
-                        name="comment_{{ item.id }}"
-                >{{ item.author.username }}</a>
+                        href="{% url 'profile' comment.author.username %}"
+                        name="comment_{{ comment.id }}"
+                >{{ comment.author.username }}</a>
             </h5>
-            {{ item.text }}
+            {{ comment.text | linebreaksbr }}
         </div>
     </div>
 

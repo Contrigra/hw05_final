@@ -53,7 +53,7 @@ def profile(request, username):
 
     }
     if not request.user.is_anonymous:
-        following = Follow.objects.filter(user=request.user, author=author)
+        following = Follow.objects.exists()
         item_dict['following'] = following
 
     return render(request, "profile.html", item_dict
@@ -63,24 +63,14 @@ def profile(request, username):
 def post_view(request, username, post_id):
     author = get_object_or_404(User, username=username)
     post = get_object_or_404(Post, author=author, pk=post_id)
-    items = Comment.objects.filter(post=post_id)
+    comments = Comment.objects.filter(post=post_id)
 
-    form = CommentForm(request.POST or None)
-    if request.method == 'POST':
-        if form.is_valid():
-            new_comment = form.save(commit=False)
-            new_comment.author = request.user
-            new_comment.post = post
-            new_comment.save()
-            return redirect('post_view', username=username,
-                            post_id=post_id)
-
-    form = CommentForm(request.POST or None)
+    form = CommentForm()
     return render(request, 'post.html',
                   {'post': post,
                    'author': author,
                    'form': form,
-                   'items': items})
+                   'comments': comments})
 
 
 @login_required
@@ -121,7 +111,7 @@ def server_error(request):
 def add_comment(request, username, post_id):
     post = get_object_or_404(Post, pk=post_id)
     author = get_object_or_404(User, username=username)
-    items = Comment.objects.filter(post=post.id)
+    comments = Comment.objects.filter(post=post.id)
 
     form = CommentForm(request.POST or None)
     if request.method == 'POST':
@@ -138,18 +128,17 @@ def add_comment(request, username, post_id):
                   {'post': post,
                    'author': author,
                    'form': form,
-                   'items': items})
+                   'comments': comments})
 
 
 @login_required
 def follow_index(request):
     user = request.user
-    followed_authors = user.follower.all()
+    followed_authors = user.follower.all().values('author')
 
     # Create a list of posts to paginate
-    post_list = []
-    for author in followed_authors:
-        post_list += Post.objects.filter(author_id=author.author_id)
+    post_list = Post.objects.filter(author__in=followed_authors).order_by(
+        '-pub_date')
 
     paginator = Paginator(post_list, 10)
     page_number = request.GET.get('page')
@@ -157,18 +146,12 @@ def follow_index(request):
     return render(request, 'follow.html',
                   {'page': page, 'paginator': paginator})
 
-    # return render(request, "follow.html", {...})
-
 
 @login_required
 def profile_follow(request, username):
-    author = User.objects.get(username=username)
-    if Follow.objects.filter(user=request.user,
-                             author_id=author.id).count() == 1:
-        return redirect('profile', username=username)
-
+    author = get_object_or_404(User, username=username)
     if request.user != author:
-        Follow.objects.create(user=request.user, author=author)
+        Follow.objects.get_or_create(user=request.user, author=author)
         return redirect('profile', username=username)
 
     return redirect('profile', username=username)
@@ -176,10 +159,8 @@ def profile_follow(request, username):
 
 @login_required
 def profile_unfollow(request, username):
-    author = User.objects.get(username=username)
+    author = get_object_or_404(User, username=username)
     follow_to_delete = Follow.objects.filter(user=request.user,
                                              author=author)
     follow_to_delete.delete()
     return redirect('profile', username=username)
-
-
