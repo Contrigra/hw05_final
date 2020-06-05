@@ -273,7 +273,7 @@ class TestFollowerSystem(TestCase):
 
 class TestCommentSystem(TestCase):
     """Test for proper commenting. Test if anon and
-    -anon can or cannot comment"""
+    non-anon can or cannot comment"""
 
     def setUp(self):
         self.user = User.objects.create_user(username='testuser',

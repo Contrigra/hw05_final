@@ -3,7 +3,7 @@ from django.core.paginator import Paginator
 from django.shortcuts import render, get_object_or_404, redirect
 
 from posts.forms import PostForm, CommentForm
-from posts.models import Post, Group, User, Comment, Follow
+from posts.models import Post, Group, User, Follow
 
 
 def index(request):
@@ -53,7 +53,8 @@ def profile(request, username):
 
     }
     if not request.user.is_anonymous:
-        following = Follow.objects.exists()
+        following = Follow.objects.filter(user=request.user,
+                                          author=author).exists()
         item_dict['following'] = following
 
     return render(request, "profile.html", item_dict
@@ -63,7 +64,7 @@ def profile(request, username):
 def post_view(request, username, post_id):
     author = get_object_or_404(User, username=username)
     post = get_object_or_404(Post, author=author, pk=post_id)
-    comments = Comment.objects.filter(post=post_id)
+    comments = post.post_comments.all()
 
     form = CommentForm()
     return render(request, 'post.html',
@@ -111,7 +112,7 @@ def server_error(request):
 def add_comment(request, username, post_id):
     post = get_object_or_404(Post, pk=post_id)
     author = get_object_or_404(User, username=username)
-    comments = Comment.objects.filter(post=post.id)
+    comments = post.post_comments.all()
 
     form = CommentForm(request.POST or None)
     if request.method == 'POST':
@@ -123,7 +124,6 @@ def add_comment(request, username, post_id):
             return redirect('post_view', username=username,
                             post_id=post_id)
 
-    form = CommentForm(request.POST or None)
     return render(request, 'post.html',
                   {'post': post,
                    'author': author,
@@ -152,7 +152,6 @@ def profile_follow(request, username):
     author = get_object_or_404(User, username=username)
     if request.user != author:
         Follow.objects.get_or_create(user=request.user, author=author)
-        return redirect('profile', username=username)
 
     return redirect('profile', username=username)
 
